@@ -14,7 +14,7 @@ router.post("/user", (request, response, next) => {
 });
 
 router.get("/user", (request, response, next) => {
-  const limit = request.query.limit || 10;
+  const limit = request.query.limit || 100;
   const offset = request.query.offset || 0;
 
   User.findAndCountAll({ limit, offset })
