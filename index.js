@@ -5,6 +5,7 @@ const Sse = require("json-sse");
 const authRouter = require("./auth/router");
 const userRouter = require("./user/router");
 const roomFactory = require("./game-room/router");
+const Room = require("./game-room/model");
 
 const port = process.env.PORT || 4000;
 const app = express();
@@ -24,8 +25,22 @@ app.get("/", (request, response) => {
   response.send("hello");
 });
 
-app.get("/stream", (request, response) => {
-  stream.init(request, response);
+app.get("/stream", async (request, response, next) => {
+  try {
+    const rooms = await Room.findAll();
+
+    const action = {
+      type: "ALL_ROOMS",
+      payload: rooms
+    };
+
+    const string = JSON.stringify(action);
+
+    stream.updateInit(string);
+    stream.init(request, response);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use(authRouter);
