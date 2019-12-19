@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const Room = require("./model");
 const User = require("../user/model");
+const auth = require("../auth/middleware");
 
 function factory(stream) {
   const router = new Router();
@@ -21,16 +22,26 @@ function factory(stream) {
     }
   });
 
-  router.put("/join", async (request, response, next) => {
+  router.put("/join", auth, async (request, response, next) => {
     try {
       const user = await User.update(
         { roomId: request.body.roomId },
-        { where: { id: request.body.userId } }
+        { where: { id: request.user.id } }
       );
 
+      const allRooms = await Room.findAll({ include: [User] });
+
+      const action = {
+        type: "ALL_ROOMS",
+        payload: allRooms
+      };
+
+      const string = JSON.stringify(action);
+
+      stream.send(string);
       response.send(user);
     } catch (error) {
-      next(error);
+      error(next);
     }
   });
 

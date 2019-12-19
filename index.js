@@ -6,6 +6,7 @@ const authRouter = require("./auth/router");
 const userRouter = require("./user/router");
 const roomFactory = require("./game-room/router");
 const Room = require("./game-room/model");
+const User = require("./user/model");
 
 const port = process.env.PORT || 4000;
 const app = express();
@@ -19,6 +20,8 @@ app.use(corsMiddleware);
 app.use(parserMiddleware);
 
 app.use(roomRouter);
+app.use(authRouter);
+app.use(userRouter);
 
 app.get("/", (request, response) => {
   stream.send("test");
@@ -27,7 +30,7 @@ app.get("/", (request, response) => {
 
 app.get("/stream", async (request, response, next) => {
   try {
-    const rooms = await Room.findAll();
+    const rooms = await Room.findAll({ include: [User] });
 
     const action = {
       type: "ALL_ROOMS",
@@ -42,8 +45,5 @@ app.get("/stream", async (request, response, next) => {
     next(error);
   }
 });
-
-app.use(authRouter);
-app.use(userRouter);
 
 app.listen(port, () => console.log(`Hey, I'm on port ${port}!`));
